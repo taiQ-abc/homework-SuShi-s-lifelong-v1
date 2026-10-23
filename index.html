@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>苏轼的传奇一生 · 山河行迹</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --ink: #2a2620;
+    --ink-light: #5c5346;
+    --ink-faint: #8a7f6e;
+    --paper: #ece3d2;
+    --paper-deep: #ddd0b8;
+    --gold: #a8875a;
+    --gold-deep: #7a5f3a;
+    --red: #9c3528;
+    --jade: #6f8071;
+  }
+  html, body {
+    height: 100%;
+    font-family: "Noto Serif SC", "Songti SC", "SimSun", "STSong", serif;
+    background: var(--paper);
+    color: var(--ink);
+    overflow: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.5;
+    background-image:
+      radial-gradient(ellipse at 12% 18%, rgba(200,185,155,.35) 0%, transparent 45%),
+      radial-gradient(ellipse at 88% 82%, rgba(180,165,135,.28) 0%, transparent 45%),
+      radial-gradient(ellipse at 60% 40%, rgba(255,250,235,.3) 0%, transparent 60%),
+      url("data:image/svg+xml,%3Csvg width='300' height='300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.1'/%3E%3C/svg%3E");
+    z-index: 0;
+  }
+  .corner-deco { position: fixed; pointer-events: none; z-index: 2; opacity: 0.32; }
+  .corner-deco.tl { top: 0; left: 0; width: 170px; height: 170px; }
+  .corner-deco.tr { top: 0; right: 0; width: 170px; height: 170px; transform: scaleX(-1); }
+  .corner-deco.bl { bottom: 0; left: 0; width: 200px; height: 200px; transform: scaleY(-1); }
+  .corner-deco.br { bottom: 0; right: 0; width: 200px; height: 200px; transform: scale(-1,-1); }
+  .mountains-bg {
+    position: fixed; bottom: 0; left: 0;
+    width: 100%; height: 42vh;
+    pointer-events: none; z-index: 1; opacity: 0.22;
+  }
+  .mountains-bg svg { width: 100%; height: 100%; }
+  .header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 20;
+    padding: 22px 40px 14px; text-align: center; pointer-events: none;
+    background: linear-gradient(to bottom, var(--paper) 0%, rgba(236,227,210,.92) 50%, transparent 100%);
+  }
+  .header h1 {
+    font-size: clamp(28px, 3.4vw, 44px); font-weight: 700;
+    letter-spacing: 0.32em; color: var(--ink); display: inline-block;
+    text-shadow: 1px 1px 0 rgba(168,135,90,.3), 0 0 20px rgba(236,227,210,.8);
+    font-family: "STKaiti", "KaiTi", "Noto Serif SC", serif;
+  }
+  .header h1::after {
+    content: ''; display: block; width: 60%; height: 1px; margin: 10px auto 0;
+    background: linear-gradient(90deg, transparent, var(--gold-deep), var(--gold), var(--gold-deep), transparent);
+  }
+  .header .subtitle {
+    font-size: 12.5px; color: var(--ink-faint); letter-spacing: 0.6em;
+    margin-top: 8px; font-weight: 400; font-family: "STKaiti", "KaiTi", serif;
+  }
+  .seal {
+    position: absolute; top: 16px; right: 40px; width: 46px; height: 46px;
+    border: 2px solid var(--red); border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--red); font-size: 13px; font-weight: 700;
+    letter-spacing: 0.1em; writing-mode: vertical-rl; opacity: 0.7;
+    transform: rotate(4deg); pointer-events: none;
+    font-family: "STKaiti", "KaiTi", serif;
+    box-shadow: inset 0 0 0 1px rgba(156,53,40,.2);
+  }
+  #map { position: absolute; inset: 0; z-index: 10; }
+  .info-panel {
+    position: fixed; right: 24px; top: 50%;
+    transform: translateY(-50%) translateX(calc(100% + 60px));
+    width: 430px; max-height: 84vh;
+    background: linear-gradient(160deg, #f6efdf 0%, #ede3ce 100%);
+    border: 1px solid var(--gold); border-radius: 2px;
+    box-shadow: 0 30px 80px rgba(42,38,32,.35), inset 0 0 0 5px rgba(246,239,223,.95), inset 0 0 0 6px rgba(168,135,90,.3), inset 0 0 80px rgba(168,135,90,.08);
+    z-index: 60; transition: transform 0.55s cubic-bezier(.34,1.3,.64,1), opacity 0.4s;
+    opacity: 0; display: flex; flex-direction: column; overflow: hidden;
+  }
+  .info-panel.show { transform: translateY(-50%) translateX(0); opacity: 1; }
+  .panel-inner { padding: 30px 26px 28px; overflow-y: auto; flex: 1; }
+  .panel-inner::-webkit-scrollbar { width: 3px; }
+  .panel-inner::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
+  .panel-close {
+    position: absolute; top: 12px; right: 14px; width: 30px; height: 30px;
+    border: 1px solid rgba(168,135,90,.4); background: rgba(246,239,223,.6);
+    font-size: 15px; color: var(--ink-faint); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.25s; z-index: 5; font-family: serif; border-radius: 50%;
+  }
+  .panel-close:hover { color: var(--red); border-color: var(--red); transform: rotate(90deg); }
+  .panel-era {
+    display: inline-block; font-size: 11px; color: var(--red);
+    letter-spacing: 0.22em; border: 1px solid rgba(156,53,40,.5);
+    padding: 3px 11px; margin-bottom: 14px; font-weight: 600;
+    font-family: "STKaiti", "KaiTi", serif; background: rgba(156,53,40,.04);
+  }
+  .panel-place {
+    font-size: 27px; font-weight: 700; color: var(--ink);
+    letter-spacing: 0.14em; margin-bottom: 4px; line-height: 1.3;
+    font-family: "STKaiti", "KaiTi", serif;
+  }
+  .panel-modern { font-size: 11.5px; color: var(--ink-faint); margin-bottom: 18px; letter-spacing: 0.06em; }
+  .panel-divider {
+    position: relative; width: 100%; height: 1px; margin: 18px 0;
+    background: linear-gradient(90deg, transparent, rgba(168,135,90,.5) 20%, rgba(168,135,90,.5) 80%, transparent);
+  }
+  .panel-divider::after {
+    content: '❖'; position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%); color: var(--gold);
+    font-size: 9px; background: #f1e8d6; padding: 0 8px;
+  }
+  .panel-story { font-size: 13.5px; line-height: 2.1; color: var(--ink); text-indent: 2em; letter-spacing: 0.02em; }
+  .poem-card {
+    position: relative;
+    background: linear-gradient(150deg, rgba(240,232,215,.7) 0%, rgba(232,221,199,.5) 100%);
+    border: 1px solid rgba(168,135,90,.25);
+    border-left: 3px solid var(--gold-deep);
+    padding: 18px 18px 16px; margin-bottom: 14px;
+    box-shadow: inset 0 0 20px rgba(168,135,90,.06);
+  }
+  .poem-card:last-child { margin-bottom: 0; }
+  .poem-title {
+    font-size: 15.5px; font-weight: 700; color: var(--ink);
+    margin-bottom: 10px; letter-spacing: 0.08em;
+    font-family: "STKaiti", "KaiTi", serif;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .poem-title::before { content: ''; width: 5px; height: 5px; background: var(--red); transform: rotate(45deg); flex-shrink: 0; }
+  .poem-text {
+    font-size: 13.5px; line-height: 2.1; color: var(--ink-light);
+    white-space: pre-line; font-family: "STKaiti", "KaiTi", "Noto Serif SC", serif;
+    letter-spacing: 0.06em; padding-left: 4px;
+  }
+  .poem-note { font-size: 11px; color: var(--gold-deep); margin-top: 10px; font-style: italic; padding-left: 4px; }
+  .bg-section {
+    margin-top: 14px; padding: 14px 14px 12px;
+    background: rgba(156,53,40,.035); border: 1px dashed rgba(156,53,40,.28); position: relative;
+  }
+  .bg-title {
+    font-size: 11.5px; font-weight: 700; color: var(--red);
+    letter-spacing: 0.25em; margin-bottom: 10px;
+    font-family: "STKaiti", "KaiTi", serif;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .bg-title::before { content: '◆'; font-size: 7px; color: var(--gold-deep); }
+  .bg-text { font-size: 12.5px; line-height: 1.95; color: var(--ink-light); text-indent: 2em; letter-spacing: 0.015em; margin-bottom: 9px; }
+  .bg-text:last-child { margin-bottom: 0; }
+  .bg-text em { color: var(--red); font-style: normal; font-weight: 600; }
+  .footer-hint {
+    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+    z-index: 20; font-size: 11.5px; color: var(--ink-faint);
+    letter-spacing: 0.4em; opacity: 0.6; pointer-events: none; white-space: nowrap;
+    font-family: "STKaiti", "KaiTi", serif;
+  }
+  @media (max-width: 768px) {
+    .header { padding: 12px 16px 8px; }
+    .header h1 { font-size: 21px; letter-spacing: 0.2em; }
+    .header .subtitle { font-size: 9.5px; letter-spacing: 0.4em; }
+    .seal { width: 34px; height: 34px; font-size: 10px; top: 10px; right: 16px; }
+    .info-panel { right: 10px; left: 10px; width: auto; top: auto; bottom: 0; transform: translateY(100%); max-height: 64vh; border-radius: 12px 12px 0 0; }
+    .info-panel.show { transform: translateY(0); }
+    .panel-inner { padding: 22px 18px; }
+    .panel-place { font-size: 21px; }
+    .footer-hint { font-size: 9.5px; bottom: 8px; letter-spacing: 0.22em; }
+    .corner-deco.tl, .corner-deco.tr { width: 100px; height: 100px; }
+    .corner-deco.bl, .corner-deco.br { width: 130px; height: 130px; }
+  }
+</style>
+</head>
+<body>
+
+<svg class="corner-deco tl" viewBox="0 0 170 170" xmlns="http://www.w3.org/2000/svg">
+  <path d="M0,0 L110,0 Q85,20 95,48 Q105,76 76,86 Q48,96 38,124 Q28,152 0,142 Z" fill="#8a9a8a" opacity="0.5"/>
+  <path d="M0,0 L75,0 Q58,25 68,48 Q78,72 52,82 Q32,92 23,116 Q14,136 0,130 Z" fill="#6b7b6e" opacity="0.4"/>
+  <path d="M0,0 L38,0 Q28,20 33,38 Q38,58 24,68 Q10,78 5,96 Z" fill="#5a6a5e" opacity="0.3"/>
+</svg>
+<svg class="corner-deco tr" viewBox="0 0 170 170" xmlns="http://www.w3.org/2000/svg">
+  <path d="M0,0 L110,0 Q85,20 95,48 Q105,76 76,86 Q48,96 38,124 Q28,152 0,142 Z" fill="#8a9a8a" opacity="0.5"/>
+  <path d="M0,0 L75,0 Q58,25 68,48 Q78,72 52,82 Q32,92 23,116 Q14,136 0,130 Z" fill="#6b7b6e" opacity="0.4"/>
+</svg>
+
+<div class="mountains-bg">
+  <svg viewBox="0 0 1440 380" preserveAspectRatio="none">
+    <path d="M0,380 L0,270 Q140,175 280,235 Q420,295 560,195 Q700,95 840,175 Q980,255 1120,155 Q1260,55 1440,145 L1440,380 Z" fill="#8a9a8a" opacity="0.5"/>
+    <path d="M0,380 L0,310 Q180,235 320,285 Q460,335 600,245 Q740,155 880,225 Q1020,295 1160,215 Q1300,135 1440,195 L1440,380 Z" fill="#6b7b6e" opacity="0.38"/>
+    <path d="M0,380 L0,350 Q220,295 420,335 Q620,375 820,305 Q1020,235 1220,295 Q1360,335 1440,305 L1440,380 Z" fill="#5a6a5e" opacity="0.25"/>
+  </svg>
+</div>
+
+<header class="header">
+  <h1>苏轼的传奇一生</h1>
+  <div class="subtitle">雪泥鸿爪 · 一蓑烟雨</div>
+  <div class="seal">东坡</div>
+</header>
+
+<div id="map"></div>
+
+<div class="info-panel" id="infoPanel">
+  <button class="panel-close" id="panelClose">✕</button>
+  <div class="panel-inner" id="panelInner"></div>
+</div>
+
+<div class="footer-hint">点击地图标记 · 追寻东坡足迹</div>
+
+<script>
+const locations = [
+  {
+    id: 'meishan',
+    name: '眉山',
+    modern: '今四川眉山',
+    coord: [103.85, 30.05],
+    era: '出生与少年 · 1037—1056年',
+    story: '景祐三年十二月十九日（1037年1月8日），苏轼出生于眉州眉山。父亲苏洵、母亲程氏给予他深厚的家学熏陶。少年苏轼“奋厉有当世志”，十岁便能写出奇句，博通经史，每天手抄汉书。眉山的青山秀水与苏门书香，塑造了他一生的底色。',
+    poems: [
+      { title: '咏怪石', text: '家有粗险石，植之疏竹轩。\n人皆喜寻玩，吾独思弃捐。\n……\n尔胡不自行，磊落天地间。', note: '少年时作，已见不肯随俗的性情。' }
+    ]
+  },
+  {
+    id: 'bianjing',
+    name: '汴京 · 凤翔',
+    modern: '今河南开封、陕西凤翔',
+    coord: [108.94, 34.34],
+    era: '出仕 · 1057—1065年',
+    story: '嘉祐二年（1057年），二十一岁的苏轼与弟弟苏辙同榜进士及第，主考官欧阳修读其文惊叹“老夫当避路，放他出一头地”。嘉祐六年（1061年），苏轼通过制科考试，授签书凤翔府判官，这是他的第一份实职。凤翔三年，他深入民间，初显治理才能，也写下了大量纪行诗。',
+    poems: [
+      { title: '和子由渑池怀旧', text: '人生到处知何似，应似飞鸿踏雪泥。\n泥上偶然留指爪，鸿飞那复计东西。\n老僧已死成新塔，坏壁无由见旧题。\n往日崎岖还记否，路长人困蹇驴嘶。', note: '赴凤翔途中和弟诗，人生无常与旷达兼而有之。' }
+    ]
+  },
+  {
+    id: 'hangzhou1',
+    name: '杭州',
+    modern: '今浙江杭州',
+    coord: [120.15, 30.28],
+    era: '通判 · 1071—1074年',
+    story: '熙宁四年（1071年），因与王安石变法意见不合，苏轼自请外放，通判杭州。这是他第一次到杭州，三年间他遍游西湖山水，写下大量诗篇。杭州的湖山之美暂时抚慰了他的政治苦闷，也让他从书斋走向了更广阔的生活。',
+    poems: [
+      { title: '饮湖上初晴后雨·其二', text: '水光潋滟晴方好，山色空蒙雨亦奇。\n欲把西湖比西子，淡妆浓抹总相宜。', note: '西湖千古第一名诗，从此西子湖之名不胫而走。' },
+      { title: '六月二十七日望湖楼醉书', text: '黑云翻墨未遮山，白雨跳珠乱入船。\n卷地风来忽吹散，望湖楼下水如天。', note: '写西湖骤雨，笔力迅疾如画。' }
+    ]
+  },
+  {
+    id: 'mizhou',
+    name: '密州',
+    modern: '今山东诸城',
+    coord: [119.41, 35.99],
+    era: '知州 · 1074—1076年',
+    story: '熙宁七年（1074年），苏轼移知密州。此时他仕途失意，与弟弟苏辙已多年未见。密州蝗旱相继，他积极赈灾，同时迎来了词创作的第一个高峰。豪放词的开山之作《江城子·密州出猎》和千古中秋词《水调歌头》都诞生于此[citation:2][citation:14]。',
+    poems: [
+      { title: '江城子·密州出猎', text: '老夫聊发少年狂，左牵黄，右擎苍。\n锦帽貂裘，千骑卷平冈。\n为报倾城随太守，亲射虎，看孙郎。\n酒酣胸胆尚开张。鬓微霜，又何妨！\n持节云中，何日遣冯唐？\n会挽雕弓如满月，西北望，射天狼。', note: '豪放词的开山之作，一扫此前词的柔靡风气。' },
+      { title: '水调歌头·明月几时有', text: '明月几时有？把酒问青天。\n不知天上宫阙，今夕是何年。\n我欲乘风归去，又恐琼楼玉宇，高处不胜寒。\n起舞弄清影，何似在人间。\n转朱阁，低绮户，照无眠。\n不应有恨，何事长向别时圆？\n人有悲欢离合，月有阴晴圆缺，此事古难全。\n但愿人长久，千里共婵娟。', note: '丙辰中秋怀子由，中秋词自此篇一出，余词尽废。' }
+    ]
+  },
+  {
+    id: 'xuzhou',
+    name: '徐州',
+    modern: '今江苏徐州',
+    coord: [117.18, 34.26],
+    era: '知州 · 1077—1079年',
+    story: '熙宁十年（1077年），苏轼知徐州。到任不久便遭遇黄河决口，洪水围城。他亲率军民筑堤抗洪，在城墙上搭草棚住了四十余天，最终保全了徐州城。徐州百姓感念其恩，他离任时夹道相送。这是他地方官生涯中最具实干色彩的一段。',
+    poems: [
+      { title: '登云龙山', text: '醉中走上黄茅冈，满冈乱石如群羊。\n冈头醉倒石作床，仰看白云天茫茫。\n歌声落谷秋风长，路人举首东南望，拍手大笑使君狂。', note: '徐州任上醉游之作，放达不羁。' }
+    ]
+  },
+  {
+    id: 'huangzhou',
+    name: '黄州',
+    modern: '今湖北黄冈',
+    coord: [114.88, 30.45],
+    era: '贬谪 · 1080—1084年',
+    story: '元丰二年（1079年），苏轼因“乌台诗案”被捕入狱，险些丧命，最终贬为黄州团练副使。这是他人生第一次重大贬谪。在黄州的四年多里，他躬耕东坡、自号“东坡居士”，完成了从苏轼到苏东坡的精神蜕变。黄州时期是他文学成就的最高峰，前后《赤壁赋》《念奴娇·赤壁怀古》《定风波》等名篇皆诞生于此[citation:2][citation:8]。',
+    poems: [
+      { title: '念奴娇·赤壁怀古', text: '大江东去，浪淘尽，千古风流人物。\n故垒西边，人道是，三国周郎赤壁。\n乱石穿空，惊涛拍岸，卷起千堆雪。\n江山如画，一时多少豪杰。\n遥想公瑾当年，小乔初嫁了，雄姿英发。\n羽扇纶巾，谈笑间，樯橹灰飞烟灭。\n故国神游，多情应笑我，早生华发。\n人生如梦，一尊还酹江月。', note: '宋词第一名篇，以周瑜之得意反衬自身之失意，而终归于旷达。' },
+      { title: '定风波·莫听穿林打叶声', text: '莫听穿林打叶声，何妨吟啸且徐行。\n竹杖芒鞋轻胜马，谁怕？一蓑烟雨任平生。\n料峭春风吹酒醒，微冷，山头斜照却相迎。\n回首向来萧瑟处，归去，也无风雨也无晴。', note: '黄州时期精神境界的最高写照，旷达从容。' },
+      { title: '卜算子·缺月挂疏桐', text: '缺月挂疏桐，漏断人初静。\n谁见幽人独往来，缥缈孤鸿影。\n惊起却回头，有恨无人省。\n拣尽寒枝不肯栖，寂寞沙洲冷。', note: '初到黄州时作，惊魂未定中的孤傲坚守。' }
+    ]
+  },
+  {
+    id: 'hangzhou2',
+    name: '杭州（再知）',
+    modern: '今浙江杭州',
+    coord: [120.15, 30.28],
+    era: '知州 · 1089—1091年',
+    story: '元祐四年（1089年），苏轼以龙图阁学士出知杭州。这是他第二次到杭州，与通判时不同，这次他是一州之长，得以施展抱负。他疏浚西湖、修筑苏堤，用挖出的淤泥堆成一道长堤，既便利交通又美化湖山。杭州百姓至今感念“苏公堤”。',
+    poems: [
+      { title: '赠刘景文', text: '荷尽已无擎雨盖，菊残犹有傲霜枝。\n一年好景君须记，最是橙黄橘绿时。', note: '杭州任上赠友之作，勉励中见旷达。' }
+    ]
+  },
+  {
+    id: 'huizhou',
+    name: '惠州',
+    modern: '今广东惠州',
+    coord: [114.41, 23.11],
+    era: '贬谪 · 1094—1097年',
+    story: '绍圣元年（1094年），新党再度得势，苏轼被贬惠州。此时他已年近六旬，却依然保持着乐观的天性。“日啖荔枝三百颗，不辞长作岭南人”便是他在惠州写下的名句。他在惠州还写了大量和陶诗，并留下《荔支叹》这样关怀民瘼的现实主义杰作[citation:2][citation:12]。',
+    poems: [
+      { title: '食荔支二首·其二', text: '罗浮山下四时春，卢橘杨梅次第新。\n日啖荔支三百颗，不辞长作岭南人。', note: '以食荔之乐写贬谪之地的安居，旷达至极。' },
+      { title: '纵笔', text: '白头萧散满霜风，小阁藤床寄病容。\n报道先生春睡美，道人轻打五更钟。', note: '据说政敌章惇见“春睡美”句，怒而将其再贬儋州。' }
+    ]
+  },
+  {
+    id: 'danzhou',
+    name: '儋州',
+    modern: '今海南儋州',
+    coord: [109.58, 19.52],
+    era: '贬谪 · 1097—1100年',
+    story: '绍圣四年（1097年），六十二岁的苏轼被再贬儋州（今海南）。在宋代，放逐海南是仅次于满门抄斩的惩罚。初到儋州时他“环视天水无际，凄然伤之”，但很快便随遇而安。他在儋州办学教书、劝导农耕、研究医药，与当地百姓结下深厚情谊。北归时他写下“九死南荒吾不恨，兹游奇绝冠平生”[citation:8][citation:15]。',
+    poems: [
+      { title: '六月二十日夜渡海', text: '参横斗转欲三更，苦雨终风也解晴。\n云散月明谁点缀，天容海色本澄清。\n空余鲁叟乘桴意，粗识轩辕奏乐声。\n九死南荒吾不恨，兹游奇绝冠平生。', note: '遇赦北归渡海之作，以“奇绝”总结贬谪生涯，气魄非凡。' },
+      { title: '儋耳山', text: '突兀隘空虚，他山总不如。\n君看道旁石，尽是补天余。', note: '初到儋州时作，以补天石自喻，不平中见自负。' }
+    ]
+  },
+  {
+    id: 'changzhou',
+    name: '常州',
+    modern: '今江苏常州',
+    coord: [119.95, 31.79],
+    era: '终老 · 1101年',
+    story: '元符三年（1100年），徽宗即位，大赦天下，苏轼得以北归。他一路北行，沿途百姓争相迎接。建中靖国元年（1101年）七月，苏轼病逝于常州，享年六十六岁。临终前，维琳方丈在他耳边大声说“端明宜忘西方”，苏轼微声答道：“西方不无，但个里着力不得。”一代文豪，就此谢幕。',
+    poems: [
+      { title: '自题金山画像', text: '心似已灰之木，身如不系之舟。\n问汝平生功业，黄州惠州儋州。', note: '北归途中自题画像，以三处贬所为平生功业，旷达中见沉痛。' }
+    ]
+  }
+];
+
+const chart = echarts.init(document.getElementById('map'), null, { renderer: 'canvas' });
+const MAP_URL = 'https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json';
+
+fetch(MAP_URL)
+  .then(res => res.json())
+  .then(geoJson => { echarts.registerMap('china', geoJson); renderMap(); })
+  .catch(() => {
+    fetch('https://cdn.jsdelivr.net/npm/echarts@4.9.0/map/json/china.json')
+      .then(r => r.json())
+      .then(geoJson => { echarts.registerMap('china', geoJson); renderMap(); })
+      .catch(() => {
+        document.getElementById('map').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#8a7f6e;font-size:14px;">地图数据加载失败，请检查网络后刷新</div>';
+      });
+  });
+
+function renderMap() {
+  const scatterData = locations.map(loc => ({ name: loc.name, value: [...loc.coord, 1], id: loc.id }));
+  const lineCoords = locations.map(loc => loc.coord);
+
+  const option = {
+    backgroundColor: 'transparent',
+    geo: {
+      map: 'china', roam: true, zoom: 1.15, center: [108, 32],
+      label: { show: false },
+      itemStyle: {
+        areaColor: 'rgba(224,213,192,.6)',
+        borderColor: 'rgba(122,95,58,.5)',
+        borderWidth: 0.8,
+        shadowColor: 'rgba(42,38,32,.08)', shadowBlur: 8, shadowOffsetY: 2
+      },
+      emphasis: {
+        itemStyle: { areaColor: 'rgba(168,135,90,.22)', borderColor: 'rgba(122,95,58,.85)', borderWidth: 1.2 }
+      },
+      select: { disabled: true }
+    },
+    series: [
+      {
+        type: 'lines', coordinateSystem: 'geo', zlevel: 2,
+        effect: { show: true, period: 6, trailLength: 0.18, symbol: 'arrow', symbolSize: 4, color: 'rgba(156,53,40,.32)' },
+        lineStyle: { color: 'rgba(156,53,40,.25)', width: 1.3, curveness: 0.2, type: 'dashed' },
+        data: lineCoords.slice(0, -1).map((from, i) => ({ coords: [from, lineCoords[i + 1]] }))
+      },
+      {
+        type: 'scatter', coordinateSystem: 'geo', zlevel: 3, symbol: 'circle', symbolSize: 15,
+        itemStyle: {
+          color: '#f3ead6', borderColor: '#9c3528', borderWidth: 2,
+          shadowColor: 'rgba(156,53,40,.35)', shadowBlur: 8, shadowOffsetY: 2
+        },
+        emphasis: {
+          scale: 1.6,
+          itemStyle: { color: '#fdf8ec', borderColor: '#9c3528', borderWidth: 2.5, shadowBlur: 16, shadowColor: 'rgba(156,53,40,.55)' }
+        },
+        label: {
+          show: true, formatter: '{b}', position: 'right', offset: [8, 0],
+          color: '#2a2620', fontSize: 11.5, fontWeight: 600,
+          fontFamily: '"STKaiti","KaiTi","Noto Serif SC",serif',
+          textShadowColor: 'rgba(243,234,214,.95)', textShadowBlur: 5
+        },
+        data: scatterData
+      }
+    ]
+  };
+
+  chart.setOption(option);
+
+  chart.on('click', function (params) {
+    if (params.seriesType === 'scatter') {
+      const loc = locations.find(l => l.name === params.name);
+      if (loc) openLocation(loc.id);
+    }
+  });
+}
+
+const infoPanel = document.getElementById('infoPanel');
+const panelInner = document.getElementById('panelInner');
+
+function renderPoem(poem) {
+  let html = `
+    <div class="poem-title">${poem.title}</div>
+    <div class="poem-text">${poem.text}</div>
+    ${poem.note ? `<div class="poem-note">${poem.note}</div>` : ''}
+  `;
+  if (poem.background && poem.background.length > 0) {
+    html += `<div class="bg-section"><div class="bg-title">创作背景</div>${poem.background.map(p => `<div class="bg-text">${p}</div>`).join('')}</div>`;
+  }
+  return `<div class="poem-card">${html}</div>`;
+}
+
+function openLocation(id) {
+  const loc = locations.find(l => l.id === id);
+  if (!loc) return;
+
+  const poemsHtml = loc.poems.map(renderPoem).join('');
+
+  panelInner.innerHTML = `
+    <div class="panel-era">${loc.era}</div>
+    <div class="panel-place">${loc.name}</div>
+    <div class="panel-modern">${loc.modern}</div>
+    <div class="panel-divider"></div>
+    <div class="panel-story">${loc.story}</div>
+    <div class="panel-divider"></div>
+    ${poemsHtml}
+  `;
+
+  panelInner.scrollTop = 0;
+  infoPanel.classList.add('show');
+}
+
+function closePanel() { infoPanel.classList.remove('show'); }
+document.getElementById('panelClose').addEventListener('click', closePanel);
+chart.getZr().on('click', function (e) { if (!e.target) closePanel(); });
+window.addEventListener('resize', () => { chart.resize(); });
+setTimeout(() => openLocation('huangzhou'), 1200);
+</script>
+</body>
+</html>
